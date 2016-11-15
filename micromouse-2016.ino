@@ -8,6 +8,8 @@
 #define RE1_PIN 2
 #define RE2_PIN 7
 
+#define Apin 14  // Analog battery monitoring pin
+
 volatile int leftTicks = 0;
 volatile int rightTicks = 0;
 
