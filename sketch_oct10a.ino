@@ -21,8 +21,8 @@ void setup() {
   pinMode(RE1_PIN, INPUT);
   pinMode(RE2_PIN, INPUT);
   Serial.begin(9600);
-  attachInterrupt(LE1_PIN, onLeftTick, FALLING);
-  attachInterrupt(RE1_PIN, onRightTick, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LE1_PIN), onLeftTick, FALLING);
+  attachInterrupt(digitalPinToInterrupt(RE1_PIN), onRightTick, FALLING);
 }
 
 void loop() {
@@ -37,8 +37,6 @@ void loop() {
 //  delay(500);
 //  motorLeft(0);
 //  motorRight(0);
-//  delay(500);
-//  Serial.println(leftTicks);
 }
 
 void onLeftTick() {
@@ -53,9 +51,9 @@ void onLeftTick() {
 
 void onRightTick() {
   if (digitalRead(RE2_PIN) == 0) {
-    rightTicks++;
-  } else {
     rightTicks--;
+  } else {
+    rightTicks++;
   }
   Serial.print("Right: ");
   Serial.println(rightTicks);
