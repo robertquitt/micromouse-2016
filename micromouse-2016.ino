@@ -30,20 +30,29 @@ void setup() {
 }
 
 void loop() {
+//  for (int i = 0; i < 255; i++) {
+//    motorLeft(i);
+//    motorRight(i);
+//    Serial.println(i);
+//    Serial.println(leftTicks);
+//    Serial.println(rightTicks);
+//    delay(20);
+//  }
   if (rightTicks < 300) {
-    motorRight(0.1);
+    motorRight(127);
   } else if (rightTicks > 310){
-    motorRight(-0.1);
+    motorRight(-127);
   } else {
     motorRight(0);
   }
   if (leftTicks < 300) {
-    motorLeft(0.15);
+    motorLeft(127);
   } else if (leftTicks > 310){
-    motorLeft(-0.15);
+    motorLeft(-127);
   } else {
     motorLeft(0);
   }
+  delay(20);
 }
 
 void onLeftTick() {
@@ -52,8 +61,8 @@ void onLeftTick() {
   } else {
     leftTicks--;
   }
-  Serial.print("Left: ");
-  Serial.println(leftTicks);
+//      Serial.println(rightTicks);
+
 }
 
 void onRightTick() {
@@ -62,30 +71,30 @@ void onRightTick() {
   } else {
     rightTicks++;
   }
-  Serial.print("Right: ");
-  Serial.println(rightTicks);
+//      Serial.println(rightTicks);
+
 }
 
-void motorLeft(float spd) {
+void motorLeft(int spd) {
   if (spd > 0) {
-    analogWrite(LMF_PIN, spd * 255);
+    analogWrite(LMF_PIN, spd);
     analogWrite(LMR_PIN, 0);
   } else if (spd < 0) {
     analogWrite(LMF_PIN, 0);
-    analogWrite(LMR_PIN, -spd * 255);
+    analogWrite(LMR_PIN, -spd);
   } else {
     analogWrite(LMF_PIN, 0);
     analogWrite(LMR_PIN, 0);
   }
 }
 
-void motorRight(float spd) {
+void motorRight(int spd) {
   if (spd > 0) {
-    analogWrite(RMF_PIN, spd * 255);
+    analogWrite(RMF_PIN, spd);
     analogWrite(RMR_PIN, 0);
   } else if (spd < 0) {
     analogWrite(RMF_PIN, 0);
-    analogWrite(RMR_PIN, -spd * 255);
+    analogWrite(RMR_PIN, -spd);
   } else {
     analogWrite(RMF_PIN, 0);
     analogWrite(RMR_PIN, 0);
