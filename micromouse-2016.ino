@@ -11,6 +11,8 @@
 volatile int leftTicks = 0;
 volatile int rightTicks = 0;
 
+
+
 void setup() {
   pinMode(LMF_PIN, OUTPUT);
   pinMode(LMR_PIN, OUTPUT);
@@ -26,17 +28,20 @@ void setup() {
 }
 
 void loop() {
-//  motorLeft(0.5);
-//  motorRight(0.5);
-//  delay(500);
-//  motorLeft(0);
-//  motorRight(0);
-//  delay(500);
-//  motorLeft(-0.5);
-//  motorRight(-0.5);
-//  delay(500);
-//  motorLeft(0);
-//  motorRight(0);
+  if (rightTicks < 300) {
+    motorRight(0.1);
+  } else if (rightTicks > 310){
+    motorRight(-0.1);
+  } else {
+    motorRight(0);
+  }
+  if (leftTicks < 300) {
+    motorLeft(0.15);
+  } else if (leftTicks > 310){
+    motorLeft(-0.15);
+  } else {
+    motorLeft(0);
+  }
 }
 
 void onLeftTick() {
