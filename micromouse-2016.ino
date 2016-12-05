@@ -84,6 +84,20 @@ void loop() {
 //  } else {
 //    motorLeft(0);
 //  }
+
+
+  //SONAR CODE BELOW
+  // raw sensor data
+   uS = sonar.ping_mm();
+   
+ //uncomment to implement lowpass filtering
+   float usPrev = uS;
+   uS = sonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
+
+   Serial.print("Sonar reading:");
+   Serial.println(uS);
+   delay(100);
+
 }
 
 int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
@@ -91,7 +105,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   leftI += leftError;
   float pidTerm = (Kp * leftError) + (Kd * (leftError - lastLeftError)) + (Ki * leftI);
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Left ticks: ");
+  /*Serial.print("Left ticks: ");
   Serial.print(currentValue);
   Serial.print(" elapsed: ");
   Serial.print(elapsed);
@@ -102,25 +116,13 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" D: ");
   Serial.print(leftError - lastLeftError);
   Serial.print(" OUT: ");
-  Serial.println(out);
+  Serial.println(out);*/
   lastLeftError = leftError;
   if (abs(out) < 40) {
     return 0;
   } else {
     return out;
   }
-
-  //SONAR CODE BELOW
-  // raw sensor data
-   uS = sonar.ping_mm()
-
- //uncomment to implement lowpass filtering
-   float usPrev = uS;
-   uS = sonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
-
-   Serial.print("Sonar reading:");
-   Serial.println(uS);
-   delay(100);
 }
 
 int updateRight(int command, int targetValue, int currentValue, int elapsed) {
@@ -129,7 +131,7 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   float pidTerm = (Kp * rightError) + (Kd * (rightError - lastRightError)) +  (Ki * rightI);
 
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Right ticks: ");
+  /*Serial.print("Right ticks: ");
   Serial.print(currentValue);
   Serial.print(" elapsed: ");
   Serial.print(elapsed);
@@ -140,7 +142,7 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" D: ");
   Serial.print(rightError - lastRightError);
   Serial.print(" OUT: ");
-  Serial.println(out);
+  Serial.println(out);*/
   lastRightError = rightError;
   if (abs(out) < 40) {
     return 0;
