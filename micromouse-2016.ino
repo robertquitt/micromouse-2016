@@ -10,10 +10,16 @@
 #define RE1_PIN 2
 #define RE2_PIN 7
 
+#define TRIGGER_PIN 11
+#define ECHO_PIN 12
+
 #define Apin 14  // Analog battery monitoring pin
 
 #define NUMREADINGS 10
 #define LOOPTIME 100
+
+#define MAX_DISTANCE 200
+#define LOWPASS 0.5
 
 const float Kp = 3.0;
 const float Ki = 0.05;
@@ -22,7 +28,8 @@ int readings[NUMREADINGS];
 volatile long leftTicks = 0;
 volatile long rightTicks = 0;
 
-
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+float uS = 0;
 
 void setup() {
   pinMode(LMF_PIN, OUTPUT);
@@ -100,6 +107,18 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   } else {
     return out;
   }
+
+  //SONAR CODE BELOW
+  // raw sensor data
+   uS = sonar.ping_mm()
+   
+ //uncomment to implement lowpass filtering
+   float usPrev = uS;
+   uS = sonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
+
+   Serial.print("Sonar reading:");
+   Serial.println(uS);
+   delay(100);
 }
 
 int updateRight(int command, int targetValue, int currentValue, int elapsed) {
