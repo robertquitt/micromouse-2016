@@ -1,9 +1,9 @@
 #include <NewPing.h>
-#define LMF_PIN 7
-#define LMR_PIN 8
+#define LMF_PIN 8
+#define LMR_PIN 7
 #define LMPWM_PIN 6
-#define RMF_PIN 10
-#define RMR_PIN 11
+#define RMF_PIN A0
+#define RMR_PIN A1
 #define RMPWM_PIN 9
 
 #define LE1_PIN 3
@@ -22,8 +22,8 @@
 #define MAX_DISTANCE 200
 #define LOWPASS 0.5
 
-const float Kp = 3.0;
-const float Ki = 0.05;
+const float Kp = 2.0;
+const float Ki = 0;
 const float Kd = 0.1;
 int readings[NUMREADINGS];
 volatile long leftTicks = 0;
@@ -105,7 +105,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   leftI += leftError;
   float pidTerm = (Kp * leftError) + (Kd * (leftError - lastLeftError)) + (Ki * leftI);
   int out = constrain(command+int(pidTerm), -255, 255);
-  /*Serial.print("Left ticks: ");
+  Serial.print("Left ticks: ");
   Serial.print(currentValue);
   Serial.print(" elapsed: ");
   Serial.print(elapsed);
@@ -116,7 +116,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" D: ");
   Serial.print(leftError - lastLeftError);
   Serial.print(" OUT: ");
-  Serial.println(out);*/
+  Serial.println(out);
   lastLeftError = leftError;
   if (abs(out) < 40) {
     return 0;
