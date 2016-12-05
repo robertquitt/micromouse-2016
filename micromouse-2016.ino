@@ -1,18 +1,10 @@
-<<<<<<< HEAD
+#include <NewPing.h>
 #define LMF_PIN 7
 #define LMR_PIN 8
 #define LMPWM_PIN 6
 #define RMF_PIN 10
 #define RMR_PIN 11
 #define RMPWM_PIN 9
-=======
-#include <NewPing.h>
-
-#define LMF_PIN 9
-#define LMR_PIN 10
-#define RMF_PIN 5
-#define RMR_PIN 6
->>>>>>> e6ababb87c86ab108aeef50631d047f5cac08d30
 
 #define LE1_PIN 3
 #define LE2_PIN 5
@@ -27,17 +19,8 @@
 #define NUMREADINGS 10
 #define LOOPTIME 100
 
-<<<<<<< HEAD
-const float Kp = 0.4;
-const float Kd = 1;
-const float Ki = 0.1;
-int readings[NUMREADINGS];
-volatile long leftTicks = 0;
-volatile long rightTicks = 0;
-=======
 #define MAX_DISTANCE 200
 #define LOWPASS 0.5
->>>>>>> e6ababb87c86ab108aeef50631d047f5cac08d30
 
 const float Kp = 3.0;
 const float Ki = 0.05;
@@ -70,15 +53,7 @@ unsigned long lastMilli = 0;
 int lastLeftError = 0;
 int lastRightError = 0;
 int target = 300;
-<<<<<<< HEAD
-int leftI = 0;
-int rightI = 0;
 
-void loop() {
-  if (millis() - lastMilli >= LOOPTIME) {
-    motorLeft(updateLeft(0, 500, leftTicks));
-    motorRight(updateRight(0, 500, rightTicks));
-=======
 long leftI = 0;
 long rightI = 0;
 
@@ -91,11 +66,10 @@ void loop() {
 
     r = updateRight(0, 500, rightTicks, millis()-lastMilli);
     motorRight(r);
-    
+
     lastMilli = millis();
->>>>>>> e6ababb87c86ab108aeef50631d047f5cac08d30
   }
-  
+
 //  if (rightTicks < 300) {
 //    motorRight(127);
 //  } else if (rightTicks > 310){
@@ -112,14 +86,6 @@ void loop() {
 //  }
 }
 
-<<<<<<< HEAD
-int updateLeft(int command, int targetValue, int currentValue) {
-  int leftError = targetValue - currentValue;
-  leftI += leftError - lastLeftError;
-  float pidTerm = (Kp * leftError) + (Kd * (leftError - lastLeftError)) + (Ki * leftI);
-  lastLeftError = leftError;
-  int out = constrain(command+int(pidTerm), -256, 255);
-=======
 int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   int leftError = targetValue - currentValue;
   leftI += leftError;
@@ -138,27 +104,16 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" OUT: ");
   Serial.println(out);
   lastLeftError = leftError;
->>>>>>> e6ababb87c86ab108aeef50631d047f5cac08d30
   if (abs(out) < 40) {
     return 0;
   } else {
     return out;
   }
-<<<<<<< HEAD
-}
-
-int updateRight(int command, int targetValue, int currentValue) {
-  int rightError = targetValue - currentValue;
-  rightI += rightError - lastRightError;
-  float pidTerm = (Kp * rightError) + (Kd * (rightError - lastRightError)) +  (Ki * rightI);
-  lastRightError = rightError;
-  int out = constrain(command+int(pidTerm), -255, 255);
-=======
 
   //SONAR CODE BELOW
   // raw sensor data
    uS = sonar.ping_mm()
-   
+
  //uncomment to implement lowpass filtering
    float usPrev = uS;
    uS = sonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
@@ -187,7 +142,6 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" OUT: ");
   Serial.println(out);
   lastRightError = rightError;
->>>>>>> e6ababb87c86ab108aeef50631d047f5cac08d30
   if (abs(out) < 40) {
     return 0;
   } else {
@@ -209,7 +163,6 @@ void onRightTick() {
   } else {
     rightTicks++;
   }
-<<<<<<< HEAD
 }
 
 void motorLeft(int spd, bool reversed) {
@@ -227,8 +180,6 @@ void motorLeft(int spd, bool reversed) {
     digitalWrite(LMF_PIN, LOW);
     digitalWrite(LMR_PIN, LOW);
   }
-=======
->>>>>>> e6ababb87c86ab108aeef50631d047f5cac08d30
 }
 
 void motorLeft(int spd) {
