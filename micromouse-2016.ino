@@ -11,10 +11,14 @@
 #define RE1_PIN 2
 #define RE2_PIN 4
 
-#define TRIGGER_PIN 11
-#define ECHO_PIN 12
+#define LTRIG_PIN 11
+#define LECHO_PIN 12
 
-#define Apin 14  // Analog battery monitoring pin
+#define RTRIG_PIN A2
+#define RECHO_PIN A3
+
+#define TOF_SDA_PIN A4
+#define TOF_SCC_PIN A5
 
 #define NUMREADINGS 10
 #define LOOPTIME 100
@@ -29,7 +33,9 @@ int readings[NUMREADINGS];
 volatile long leftTicks = 0;
 volatile long rightTicks = 0;
 
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+NewPing leftSonar(LTRIG_PIN, LECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+NewPing rightSonar(RTRIG_PIN, RECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
 float uS = 0;
 
 void setup() {
@@ -62,37 +68,28 @@ int l, r;
 void loop() {
   if (millis() - lastMilli >= LOOPTIME) {
     l = updateLeft(0, 500, leftTicks, millis()-lastMilli);
-    motorLeft(l);
+    motorLeft(l*0.75);
 
     r = updateRight(0, 500, rightTicks, millis()-lastMilli);
-    motorRight(r);
+    motorRight(r*0.75);
 
     lastMilli = millis();
   }
 
-//  if (rightTicks < 300) {
-//    motorRight(127);
-//  } else if (rightTicks > 310){
-//    motorRight(-127);
-//  } else {
-//    motorRight(0);
-//  }
-//  if (leftTicks < 300) {
-//    motorLeft(127);
-//  } else if (leftTicks > 310){
-//    motorLeft(-127);
-//  } else {
-//    motorLeft(0);
-//  }
-
-
   //SONAR CODE BELOW
   // raw sensor data
-   uS = sonar.ping_mm();
+   uS = leftSonar.ping_mm();
    
- //uncomment to implement lowpass filtering
    float usPrev = uS;
-   uS = sonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
+   uS = leftSonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
+
+   Serial.print("Sonar reading:");
+   Serial.println(uS);
+   delay(100);
+   uS = rightSonar.ping_mm();
+   
+   usPrev = uS;
+   uS = rightSonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
 
    Serial.print("Sonar reading:");
    Serial.println(uS);
