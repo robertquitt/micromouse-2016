@@ -1,4 +1,9 @@
+#include <Wire.h>
+
+#include <SparkFun_VL6180X.h>
+
 #include <NewPing.h>
+
 #define LMF_PIN 8
 #define LMR_PIN 7
 #define LMPWM_PIN 6
@@ -26,6 +31,8 @@
 #define MAX_DISTANCE 200
 #define LOWPASS 0.5
 
+#define VL6180X_ADDRESS 0x29
+
 const float Kp = 2.0;
 const float Ki = 0;
 const float Kd = 0.1;
@@ -33,10 +40,14 @@ int readings[NUMREADINGS];
 volatile long leftTicks = 0;
 volatile long rightTicks = 0;
 
+VL6180xIdentification identification;
+VL6180x sensor(VL6180X_ADDRESS);
+
 NewPing leftSonar(LTRIG_PIN, LECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 NewPing rightSonar(RTRIG_PIN, RECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 
-float uS = 0;
+float uS_L = 0;
+float uS_R = 0;
 
 void setup() {
   pinMode(LMF_PIN, OUTPUT);
@@ -50,9 +61,23 @@ void setup() {
 //  for(int i=0; i<NUMREADINGS; i++)
 //    readings[i] = 0;
   Serial.begin(9600);
+  Wire.begin(); //Start I2C library
+  delay(100); // delay .1s
+  
+    sensor.getIdentification(&identification); // Retrieve manufacture info from device memory
+  printIdentification(&identification); // Helper function to print all the Module information
+
+    if(sensor.VL6180xInit() != 0){
+    Serial.println("FAILED TO INITALIZE"); //Initialize device and check for errors
+  }; 
+
+  sensor.VL6180xDefautSettings(); //Load default settings to get started.
+  
+    delay(1000); // delay 1s
+    
   attachInterrupt(digitalPinToInterrupt(LE1_PIN), onLeftTick, FALLING);
   attachInterrupt(digitalPinToInterrupt(RE1_PIN), onRightTick, FALLING);
-  Serial.println("Program Begin");
+//  Serial.println("Program Begin");
 }
 
 unsigned long lastMilli = 0;
@@ -66,6 +91,53 @@ long rightI = 0;
 int l, r;
 
 void loop() {
+  
+  //IR SENSOR CODE BELOW
+
+
+  //Get Ambient Light level and report in LUX
+//  Serial.print("Ambient Light Level (Lux) = ");
+  
+  //Input GAIN for light levels, 
+  // GAIN_20     // Actual ALS Gain of 20
+  // GAIN_10     // Actual ALS Gain of 10.32
+  // GAIN_5      // Actual ALS Gain of 5.21
+  // GAIN_2_5    // Actual ALS Gain of 2.60
+  // GAIN_1_67   // Actual ALS Gain of 1.72
+  // GAIN_1_25   // Actual ALS Gain of 1.28
+  // GAIN_1      // Actual ALS Gain of 1.01
+  // GAIN_40     // Actual ALS Gain of 40
+  
+//  Serial.println( sensor.getAmbientLight(GAIN_1) );
+
+  //Get Distance and report in mm
+//  Serial.print("Distance measured (mm) = ");
+  Serial.print( sensor.getDistance() );
+  Serial.print(" "); 
+
+  delay(100);  
+
+  //SONAR CODE BELOW
+  // raw sensor data
+   uS_L = leftSonar.ping_mm();
+   uS_R = rightSonar.ping_mm();
+   
+   float us_LPrev = uS_L;
+   uS_L = leftSonar.ping_mm() * (1-LOWPASS) + us_LPrev * LOWPASS;
+
+   float us_RPrev = uS_R;
+   uS_R = rightSonar.ping_mm() * (1-LOWPASS) + us_RPrev * LOWPASS;
+   
+
+//   Serial.print("Left sonar reading:");
+   Serial.print(uS_L);
+   Serial.print(" "); 
+//   Serial.print("Right sonar reading:");
+   Serial.print(uS_R);
+   Serial.println();
+   delay(100);
+
+   //MOTOR CODE BELOW
   if (millis() - lastMilli >= LOOPTIME) {
     l = updateLeft(0, 500, leftTicks, millis()-lastMilli);
     motorLeft(l*0.75);
@@ -75,26 +147,6 @@ void loop() {
 
     lastMilli = millis();
   }
-
-  //SONAR CODE BELOW
-  // raw sensor data
-   uS = leftSonar.ping_mm();
-   
-   float usPrev = uS;
-   uS = leftSonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
-
-   Serial.print("Sonar reading:");
-   Serial.println(uS);
-   delay(100);
-   uS = rightSonar.ping_mm();
-   
-   usPrev = uS;
-   uS = rightSonar.ping_mm() * (1-LOWPASS) + usPrev * LOWPASS;
-
-   Serial.print("Sonar reading:");
-   Serial.println(uS);
-   delay(100);
-
 }
 
 int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
@@ -102,7 +154,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   leftI += leftError;
   float pidTerm = (Kp * leftError) + (Kd * (leftError - lastLeftError)) + (Ki * leftI);
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Left ticks: ");
+/*  Serial.print("Left ticks: ");
   Serial.print(currentValue);
   Serial.print(" elapsed: ");
   Serial.print(elapsed);
@@ -113,7 +165,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" D: ");
   Serial.print(leftError - lastLeftError);
   Serial.print(" OUT: ");
-  Serial.println(out);
+  Serial.println(out);*/
   lastLeftError = leftError;
   if (abs(out) < 40) {
     return 0;
@@ -228,4 +280,33 @@ void motorRight(int spd) {
     digitalWrite(RMF_PIN, LOW);
     digitalWrite(RMR_PIN, LOW);
   }
+}
+
+void printIdentification(struct VL6180xIdentification *temp){
+ /* Serial.print("Model ID = ");
+  Serial.println(temp->idModel);
+
+  Serial.print("Model Rev = ");
+  Serial.print(temp->idModelRevMajor);
+  Serial.print(".");
+  Serial.println(temp->idModelRevMinor);
+
+  Serial.print("Module Rev = ");
+  Serial.print(temp->idModuleRevMajor);
+  Serial.print(".");
+  Serial.println(temp->idModuleRevMinor);  
+
+  Serial.print("Manufacture Date = ");
+  Serial.print((temp->idDate >> 3) & 0x001F);
+  Serial.print("/");
+  Serial.print((temp->idDate >> 8) & 0x000F);
+  Serial.print("/1");
+  Serial.print((temp->idDate >> 12) & 0x000F);
+  Serial.print(" Phase: ");
+  Serial.println(temp->idDate & 0x0007);
+
+  Serial.print("Manufacture Time (s)= ");
+  Serial.println(temp->idTime * 2);
+  Serial.println();
+  Serial.println();*/
 }
