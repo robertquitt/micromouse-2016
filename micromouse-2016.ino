@@ -97,8 +97,8 @@ void setup() {
 unsigned long lastMilli = 0;
 int lastLeftError = 0;
 int lastRightError = 0;
-int lTarget = 25;
-int rTarget = -25;
+int lTarget = 15;
+int rTarget = -15;
 
 int l, r;
 
@@ -162,8 +162,8 @@ void loop() {
 int updateTarget(float uS_L, float uS_R, float frontRange) {
   
   if (uS_R > 100) {
-    lTarget += leftTicks + 25;
-    rTarget -= rightTicks + 25;
+    lTarget = leftTicks + 25;
+    rTarget = rightTicks + 25;
   } else {
     lTarget = 50;
     rTarget = 50;
