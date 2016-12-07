@@ -31,16 +31,16 @@
 #define MAX_DISTANCE 200
 #define LOWPASS 0.5
 
-#define SLOW 0.7
-#define THRESHOLD 40
+#define SLOW 0.8
+#define THRESHOLD 20
 
 #define VL6180X_ADDRESS 0x29
 
-const float Kpl = 1.5;
-const float Kdl = 0.5;
+const float Kpl = 1.3;
+const float Kdl = 0.8;
 
-const float Kpr = 1.5;
-const float Kdr = 0.5;
+const float Kpr = 1.3;
+const float Kdr = 0.8;
 
 int readings[NUMREADINGS];
 volatile long leftTicks = 0;
@@ -133,19 +133,19 @@ void loop() {
    uS_R = rightSonar.ping_mm() * (1-LOWPASS) + us_RPrev * LOWPASS;
 
 //   Serial.print("Left sonar reading:");
-   Serial.print(uS_L);
-   Serial.print(" ");
+//   Serial.print(uS_L);
+//   Serial.print(" ");
 //   Serial.print("Right sonar reading:");
-   Serial.print(uS_R);
-   Serial.println();
+//   Serial.print(uS_R);
+//   Serial.println();
    delay(100);
 
    //MOTOR CODE BELOW
   if (millis() - lastMilli >= LOOPTIME) {
-    l = updateLeft(0, 500, leftTicks, millis()-lastMilli);
+    l = updateLeft(0, target, leftTicks, millis()-lastMilli);
     motorLeft(l*0.75);
 
-    r = updateRight(0, 500, rightTicks, millis()-lastMilli);
+    r = updateRight(0, target, rightTicks, millis()-lastMilli);
     motorRight(r*0.75);
 
     lastMilli = millis();
@@ -156,7 +156,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   int leftError = targetValue - currentValue;
   float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError));
   int out = constrain(command+int(pidTerm), -255, 255);
-/*  Serial.print("Left ticks: ");
+  Serial.print("Left ticks: ");
   Serial.print(currentValue);
   Serial.print(" elapsed: ");
   Serial.print(elapsed);
@@ -165,7 +165,7 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" D: ");
   Serial.print(leftError - lastLeftError);
   Serial.print(" OUT: ");
-  Serial.println(out);*/
+  Serial.println(out);
   lastLeftError = leftError;
   if (abs(out) < THRESHOLD) {
     return 0;
@@ -179,7 +179,7 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError));
 
   int out = constrain(command+int(pidTerm), -255, 255);
-  /*Serial.print("Right ticks: ");
+  Serial.print("Right ticks: ");
   Serial.print(currentValue);
   Serial.print(" elapsed: ");
   Serial.print(elapsed);
@@ -188,7 +188,7 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   Serial.print(" D: ");
   Serial.print(rightError - lastRightError);
   Serial.print(" OUT: ");
-  Serial.println(out);*/
+  Serial.println(out);
   lastRightError = rightError;
   if (abs(out) < THRESHOLD) {
     return 0;
