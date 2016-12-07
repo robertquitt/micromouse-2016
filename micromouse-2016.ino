@@ -38,14 +38,17 @@
 
 const float Kpl = 10;
 const float Kdl = 5;
-const float Kil = 0.5;
+const float Kil = 0;
 
 const float Kpr = 10;
 const float Kdr = 5;
-const float Kir = 0.5;
+const float Kir = 0;
 
 int rightI[NUMREADINGS];
 int leftI[NUMREADINGS];
+
+int lCommand = 0;
+int rCommand = 0;
 
 short r_i = 0;
 short l_i = 0;
@@ -97,8 +100,8 @@ void setup() {
 unsigned long lastMilli = 0;
 int lastLeftError = 0;
 int lastRightError = 0;
-int lTarget = 15;
-int rTarget = -15;
+int lTarget = 0;
+int rTarget = 0;
 
 int l, r;
 
@@ -148,6 +151,9 @@ void loop() {
    delay(100);
 
    //MOTOR CODE BELOW
+   if (abs(leftTicks - lTarget) < 20 && (leftTicks - lTarget) < 20){
+      updateTarget(uS_L, uS_R, frontRange);    
+   }
   if (millis() - lastMilli >= LOOPTIME) {
     l = updateLeft(0, lTarget, leftTicks, millis()-lastMilli);
     motorLeft(l);
@@ -162,16 +168,29 @@ void loop() {
 int updateTarget(float uS_L, float uS_R, float frontRange) {
   
   if (uS_R > 100) {
-    lTarget = leftTicks + 25;
-    rTarget = rightTicks + 25;
+    lTarget = leftTicks + 15;
+    rTarget = rightTicks - 15;
+  } else if (frontRange < 100){  
+    lTarget = leftTicks;
+    rTarget = rightTicks; 
+  } else if (frontRange < 100 && uS_R < 100){
+    lTarget = leftTicks - 15;
+    rTarget = rightTicks + 15; 
   } else {
-    lTarget = 50;
-    rTarget = 50;
+    lTarget += 40;
+    rTarget += 40;
   }
-  
+}
+
+void updateCommand(int leftCommand, int rightCommand, float leftSensor, float rightSensor) {
+  if (leftSensor < 20) {
+    rightCommand = -30;
+  } else if (rightSensor < 20) {
+    leftCommand = -30;
+  }
   if (frontRange < 100) {
     lTarget = leftTicks;
-    rTarget = rightTicks;  
+    rTarget = rightTicks;
   }
 }
 
@@ -185,18 +204,23 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
     sum += leftI[i];
   }
   l_i++;
+  if(l_i == NUMREADINGS) {
+    l_i = 0;
+  }
   float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError)) + (Kil * sum);
   int out = constrain(command+int(pidTerm), -255, 255);
-//  Serial.print("Left ticks: ");
-//  Serial.print(currentValue);
-//  Serial.print(" elapsed: ");
-//  Serial.print(elapsed);
-//  Serial.print(" P: ");
-//  Serial.print(leftError);
-//  Serial.print(" D: ");
-//  Serial.print(leftError - lastLeftError);
-//  Serial.print(" OUT: ");
-//  Serial.println(out);
+  Serial.print("Left ticks: ");
+  Serial.print(currentValue);
+  Serial.print(" elapsed: ");
+  Serial.print(elapsed);
+  Serial.print(" P: ");
+  Serial.print(leftError);
+  Serial.print(" I: ");
+  Serial.print(sum); 
+  Serial.print(" D: ");
+  Serial.print(leftError - lastLeftError);
+  Serial.print(" OUT: ");
+  Serial.println(out);
   lastLeftError = leftError;
   if (abs(out) < THRESHOLD) {
     return 0;
@@ -215,6 +239,9 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
     sum += rightI[i];
   }
   r_i++;
+  if(r_i == NUMREADINGS) {
+    r_i = 0;
+  }
   float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError)) + (Kir * sum);
 
   int out = constrain(command+int(pidTerm), -255, 255);
