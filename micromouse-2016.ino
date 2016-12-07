@@ -38,11 +38,18 @@
 
 const float Kpl = 10;
 const float Kdl = 5;
+const float Kil = 0.5;
 
 const float Kpr = 10;
 const float Kdr = 5;
+const float Kir = 0.5;
 
-int readings[NUMREADINGS];
+int rightI[NUMREADINGS];
+int leftI[NUMREADINGS];
+
+short r_i = 0;
+short l_i = 0;
+
 volatile long leftTicks = 0;
 volatile long rightTicks = 0;
 
@@ -92,9 +99,6 @@ int lastLeftError = 0;
 int lastRightError = 0;
 int lTarget = 25;
 int rTarget = -25;
-
-long leftI = 0;
-long rightI = 0;
 
 int l, r;
 
@@ -173,7 +177,15 @@ int updateTarget(float uS_L, float uS_R, float frontRange) {
 
 int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   int leftError = targetValue - currentValue;
-  float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError));
+  int sum = 0;
+  for (short i=0; i<NUMREADINGS; i++) {
+    if (i == l_i) {
+      leftI[i] = leftError;
+    }
+    sum += leftI[i];
+  }
+  l_i++;
+  float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError)) + (Kil * sum);
   int out = constrain(command+int(pidTerm), -255, 255);
 //  Serial.print("Left ticks: ");
 //  Serial.print(currentValue);
@@ -195,7 +207,15 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
 
 int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   int rightError = targetValue - currentValue;
-  float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError));
+  int sum = 0;
+  for (short i=0; i<NUMREADINGS; i++) {
+    if (i == r_i) {
+      rightI[i] = rightError;
+    }
+    sum += rightI[i];
+  }
+  r_i++;
+  float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError)) + (Kir * sum);
 
   int out = constrain(command+int(pidTerm), -255, 255);
 //  Serial.print("Right ticks: ");
