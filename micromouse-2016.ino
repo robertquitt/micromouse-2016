@@ -38,11 +38,18 @@
 
 const float Kpl = 1.3;
 const float Kdl = 0.8;
+const float Kil = 0.5;
 
 const float Kpr = 1.3;
 const float Kdr = 0.8;
+const float Kir = 0.5;
 
-int readings[NUMREADINGS];
+int rightI[NUMREADINGS];
+int leftI[NUMREADINGS];
+
+short r_i = 0;
+short l_i = 0;
+
 volatile long leftTicks = 0;
 volatile long rightTicks = 0;
 
@@ -90,9 +97,6 @@ unsigned long lastMilli = 0;
 int lastLeftError = 0;
 int lastRightError = 0;
 int target = 80;
-
-long leftI = 0;
-long rightI = 0;
 
 int l, r;
 
@@ -143,10 +147,10 @@ void loop() {
    //MOTOR CODE BELOW
   if (millis() - lastMilli >= LOOPTIME) {
     l = updateLeft(0, target, leftTicks, millis()-lastMilli);
-    motorLeft(l*0.75);
+    motorLeft(l);
 
     r = updateRight(0, target, rightTicks, millis()-lastMilli);
-    motorRight(r*0.75);
+    motorRight(r);
 
     lastMilli = millis();
   }
@@ -154,18 +158,26 @@ void loop() {
 
 int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   int leftError = targetValue - currentValue;
-  float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError));
+  int sum = 0;
+  for (short i=0; i<NUMREADINGS; i++) {
+    if (i == l_i) {
+      leftI[i] = leftError;
+    }
+    sum += leftI[i];
+  }
+  l_i++;
+  float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError)) + (Kil * sum);
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Left ticks: ");
-  Serial.print(currentValue);
-  Serial.print(" elapsed: ");
-  Serial.print(elapsed);
-  Serial.print(" P: ");
-  Serial.print(leftError);
-  Serial.print(" D: ");
-  Serial.print(leftError - lastLeftError);
-  Serial.print(" OUT: ");
-  Serial.println(out);
+//  Serial.print("Left ticks: ");
+//  Serial.print(currentValue);
+//  Serial.print(" elapsed: ");
+//  Serial.print(elapsed);
+//  Serial.print(" P: ");
+//  Serial.print(leftError);
+//  Serial.print(" D: ");
+//  Serial.print(leftError - lastLeftError);
+//  Serial.print(" OUT: ");
+//  Serial.println(out);
   lastLeftError = leftError;
   if (abs(out) < THRESHOLD) {
     return 0;
@@ -176,19 +188,27 @@ int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
 
 int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   int rightError = targetValue - currentValue;
-  float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError));
+  int sum = 0;
+  for (short i=0; i<NUMREADINGS; i++) {
+    if (i == r_i) {
+      rightI[i] = rightError;
+    }
+    sum += rightI[i];
+  }
+  r_i++;
+  float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError)) + (Kir * sum);
 
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Right ticks: ");
-  Serial.print(currentValue);
-  Serial.print(" elapsed: ");
-  Serial.print(elapsed);
-  Serial.print(" P: ");
-  Serial.print(rightError);
-  Serial.print(" D: ");
-  Serial.print(rightError - lastRightError);
-  Serial.print(" OUT: ");
-  Serial.println(out);
+//  Serial.print("Right ticks: ");
+//  Serial.print(currentValue);
+//  Serial.print(" elapsed: ");
+//  Serial.print(elapsed);
+//  Serial.print(" P: ");
+//  Serial.print(rightError);
+//  Serial.print(" D: ");
+//  Serial.print(rightError - lastRightError);
+//  Serial.print(" OUT: ");
+//  Serial.println(out);
   lastRightError = rightError;
   if (abs(out) < THRESHOLD) {
     return 0;
