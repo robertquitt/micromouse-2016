@@ -31,16 +31,16 @@
 #define MAX_DISTANCE 200
 #define LOWPASS 0.5
 
-#define SLOW 0.8
-#define THRESHOLD 20
+#define SLOW 1
+#define THRESHOLD 5
 
 #define VL6180X_ADDRESS 0x29
 
-const float Kpl = 1.3;
-const float Kdl = 0.8;
+const float Kpl = 10;
+const float Kdl = 5;
 
-const float Kpr = 1.3;
-const float Kdr = 0.8;
+const float Kpr = 10;
+const float Kdr = 5;
 
 int readings[NUMREADINGS];
 volatile long leftTicks = 0;
@@ -54,6 +54,7 @@ NewPing rightSonar(RTRIG_PIN, RECHO_PIN, MAX_DISTANCE); // NewPing setup of pins
 
 float uS_L = 0;
 float uS_R = 0;
+float frontRange = 0;
 
 void setup() {
   pinMode(LMF_PIN, OUTPUT);
@@ -89,7 +90,8 @@ void setup() {
 unsigned long lastMilli = 0;
 int lastLeftError = 0;
 int lastRightError = 0;
-int target = 80;
+int lTarget = 80;
+int rTarget = 80;
 
 long leftI = 0;
 long rightI = 0;
@@ -116,7 +118,8 @@ void loop() {
 
   //Get Distance and report in mm
 //  Serial.print("Distance measured (mm) = ");
-  Serial.print( sensor.getDistance() );
+  frontRange = sensor.getDistance();
+  Serial.print( frontRange );
   Serial.print(" ");
 
   delay(100);
@@ -133,39 +136,43 @@ void loop() {
    uS_R = rightSonar.ping_mm() * (1-LOWPASS) + us_RPrev * LOWPASS;
 
 //   Serial.print("Left sonar reading:");
-//   Serial.print(uS_L);
-//   Serial.print(" ");
+   Serial.print(uS_L);
+   Serial.print(" ");
 //   Serial.print("Right sonar reading:");
-//   Serial.print(uS_R);
-//   Serial.println();
+   Serial.print(uS_R);
+   Serial.println();
    delay(100);
 
    //MOTOR CODE BELOW
   if (millis() - lastMilli >= LOOPTIME) {
-    l = updateLeft(0, target, leftTicks, millis()-lastMilli);
-    motorLeft(l*0.75);
+    l = updateLeft(0, lTarget, leftTicks, millis()-lastMilli);
+    motorLeft(l);
 
-    r = updateRight(0, target, rightTicks, millis()-lastMilli);
-    motorRight(r*0.75);
+    r = updateRight(0, rTarget, rightTicks, millis()-lastMilli);
+    motorRight(r);
 
     lastMilli = millis();
   }
+}
+
+int updateTarget(float uS_L, float uS_R, float frontRange) {
+  
 }
 
 int updateLeft(int command, int targetValue, int currentValue, int elapsed) {
   int leftError = targetValue - currentValue;
   float pidTerm = (Kpl * leftError) + (Kdl * (leftError - lastLeftError));
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Left ticks: ");
-  Serial.print(currentValue);
-  Serial.print(" elapsed: ");
-  Serial.print(elapsed);
-  Serial.print(" P: ");
-  Serial.print(leftError);
-  Serial.print(" D: ");
-  Serial.print(leftError - lastLeftError);
-  Serial.print(" OUT: ");
-  Serial.println(out);
+//  Serial.print("Left ticks: ");
+//  Serial.print(currentValue);
+//  Serial.print(" elapsed: ");
+//  Serial.print(elapsed);
+//  Serial.print(" P: ");
+//  Serial.print(leftError);
+//  Serial.print(" D: ");
+//  Serial.print(leftError - lastLeftError);
+//  Serial.print(" OUT: ");
+//  Serial.println(out);
   lastLeftError = leftError;
   if (abs(out) < THRESHOLD) {
     return 0;
@@ -179,16 +186,16 @@ int updateRight(int command, int targetValue, int currentValue, int elapsed) {
   float pidTerm = (Kpr * rightError) + (Kdr * (rightError - lastRightError));
 
   int out = constrain(command+int(pidTerm), -255, 255);
-  Serial.print("Right ticks: ");
-  Serial.print(currentValue);
-  Serial.print(" elapsed: ");
-  Serial.print(elapsed);
-  Serial.print(" P: ");
-  Serial.print(rightError);
-  Serial.print(" D: ");
-  Serial.print(rightError - lastRightError);
-  Serial.print(" OUT: ");
-  Serial.println(out);
+//  Serial.print("Right ticks: ");
+//  Serial.print(currentValue);
+//  Serial.print(" elapsed: ");
+//  Serial.print(elapsed);
+//  Serial.print(" P: ");
+//  Serial.print(rightError);
+//  Serial.print(" D: ");
+//  Serial.print(rightError - lastRightError);
+//  Serial.print(" OUT: ");
+//  Serial.println(out);
   lastRightError = rightError;
   if (abs(out) < THRESHOLD) {
     return 0;
